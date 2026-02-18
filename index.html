@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>新春巨献 · 女王贺岁</title>
+
+<style>
+html,body{
+  margin:0;width:100%;height:100%;
+  overflow:hidden;background:#000;
+  font-family:"Microsoft YaHei","STKaiti","楷体",serif;
+}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+.text{
+  position:absolute;width:100%;bottom:12%;
+  text-align:center;opacity:0;transition:opacity 2s;
+  z-index:20;
+  pointer-events: none;
+}
+.text.show{opacity:1;}
+
+/* 立体闪烁主标题 */
+.stereo {
+  font-size: 2.8rem;
+  color: #ffd88a;
+  margin: 0;
+  text-shadow: 
+    0 1px 0 #ccc,
+    0 2px 0 #c9a,
+    0 3px 0 #aaa,
+    0 4px 0 #999,
+    0 5px 0 #888,
+    0 6px 0 #777,
+    0 7px 0 #666,
+    0 8px 0 #555,
+    0 9px 0 #444,
+    0 10px 10px rgba(0,0,0,0.5);
+  animation: shine 2s infinite alternate;
+}
+@keyframes shine {
+  from {
+    text-shadow: 
+      0 1px 0 #ccc,
+      0 2px 0 #c9a,
+      0 3px 0 #aaa,
+      0 4px 0 #999,
+      0 5px 0 #888,
+      0 6px 0 #777,
+      0 7px 0 #666,
+      0 8px 0 #555,
+      0 9px 0 #444,
+      0 10px 10px rgba(0,0,0,0.5);
+  }
+  to {
+    text-shadow: 
+      0 1px 0 #ff0,
+      0 2px 0 #f90,
+      0 3px 0 #f60,
+      0 4px 0 #f30,
+      0 5px 0 #f00,
+      0 6px 0 #c00,
+      0 7px 0 #900,
+      0 8px 0 #600,
+      0 9px 0 #300,
+      0 10px 20px rgba(255,200,0,0.8);
+  }
+}
+
+/* 祝福语行 */
+.blessings {
+  font-size: 1.4rem;
+  color: #fff;
+  margin: 0.6rem 0;
+  text-shadow: 0 2px 5px #ff9933, 0 0 10px #ff7733;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0px); }
+}
+
+/* 给女友的专属祝福（稍大一点，突出） */
+.love {
+  font-size: 1.8rem;
+  color: #ffb6c1; /* 浅粉 */
+  margin: 0.8rem 0 0.2rem;
+  text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff1493;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.1); }
+  50% { transform: scale(1); }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* 装饰符号 */
+.decor {
+  font-size: 2rem;
+  margin-top: 1rem;
+  letter-spacing: 1rem;
+  animation: spin 5s linear infinite;
+  opacity: 0.9;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  75% { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+#videoWrap{
+  position:absolute;inset:0;
+  display:flex;justify-content:center;align-items:center;
+  background:#000;z-index:50;
+}
+#introVideo{
+  height:78vh;max-width:92vw;border-radius:12px;
+  transition: all 1.2s ease;
+}
+#introVideo.goldFrame {
+  border: 3px solid rgba(255, 225, 140, 0.9);
+  box-shadow: 0 0 50px #ffb347, 0 0 120px #ff8c00;
+  transform: scale(1.01);
+}
+#transitionText{
+  position:absolute;inset:0;
+  display:flex;justify-content:center;align-items:center;
+  font-size:1.8rem;
+  color:#ffdcb0;
+  opacity:0;transition:all 1.6s;
+  z-index:60;
+  text-align:center;
+  padding:0 20px;
+}
+#transitionText.show{opacity:1;}
+audio{display:none;}
+</style>
+</head>
+
+<body>
+
+<canvas id="fireworksCanvas"></canvas>
+
+<div id="videoWrap">
+  <video id="introVideo" muted playsinline preload="auto">
+    <source src="boom.mp4" type="video/mp4">
+  </video>
+</div>
+
+<div id="transitionText">✨ 女王，请迎接幸福 ✨</div>
+
+<div class="text" id="mainText">
+  <h1 class="stereo">🐎 马年新春快乐 🐎</h1>
+  <p class="love">💝 给最美的你 · 永远开心 💝</p>
+  <p class="blessings">✨ 科研顺利 · offer多多 ✨</p>
+  <p class="blessings">💖 健康幸福 · 容颜常驻 💖</p>
+  <div class="decor">🧧🧨🏮</div>
+</div>
+
+<audio id="bgm" loop>
+  <source src="flower.mp3">
+</audio>
+
+<script>
+(()=>{
+
+/* ================= 画布 ================= */
+const canvas=document.getElementById("fireworksCanvas");
+const ctx=canvas.getContext("2d");
+let w=canvas.width=innerWidth;
+let h=canvas.height=innerHeight;
+
+window.onresize=()=>{
+  w=canvas.width=innerWidth;
+  h=canvas.height=innerHeight;
+  createStars();
+};
+
+const bg=new Image();
+bg.src="image.jpg";
+
+/* ================= 星空 ================= */
+let stars=[];
+function createStars(){
+  stars=[];
+  for(let i=0;i<150;i++){
+    stars.push({
+      x:Math.random()*w,
+      y:Math.random()*h*0.75,
+      r:Math.random()*2,
+      phase:Math.random()*100
+    });
+  }
+}
+createStars();
+
+/* ================= 音乐 ================= */
+const bgm=document.getElementById("bgm");
+document.addEventListener("click",()=>bgm.play().catch(()=>{}),{once:true});
+
+/* ================= 系统状态 ================= */
+let rockets=[];
+let particles=[];
+let running=false;
+let skyFlash=0;
+let finaleMode=false;
+
+/* ================= 粒子系统（增强版） ================= */
+function addParticle(x,y,a,s,life,trail,g,opt={}){
+ particles.push({
+   x,y,
+   vx:Math.cos(a)*s,
+   vy:Math.sin(a)*s,
+   life,
+   fullLife:life,
+   hue:opt.hue ?? randomRainbowHue(),
+   trail:[],
+   maxTrail:trail,
+   g,
+   size:opt.size||2,
+   sparkle:opt.sparkle||false,
+   strobe:opt.strobe||false,
+   onDeath:opt.onDeath || null,
+   isSolid:opt.isSolid || false,
+   solidHue:opt.solidHue || null,
+   secondaryTriggered: false
+ });
+}
+
+/* ================= 七彩随机色相 ================= */
+function randomRainbowHue() {
+  const hues = [
+    [0, 10], [350, 360], // 红
+    [30, 40],      // 橙
+    [50, 60],      // 黄
+    [90, 120],     // 绿
+    [200, 220],    // 蓝
+    [230, 250],    // 靛
+    [270, 290]     // 紫
+  ];
+  const pick = hues[Math.floor(Math.random() * hues.length)];
+  return Math.random() * (pick[1] - pick[0]) + pick[0];
+}
+
+function hueAround(baseHue, range=30) {
+  let h = baseHue + (Math.random()-0.5)*range;
+  if (h < 0) h += 360;
+  if (h > 360) h -= 360;
+  return h;
+}
+
+/* ================= 高级烟花模拟器核心 ================= */
+const COLOR = {
+  Red: '#ff0043',
+  Green: '#14fc56',
+  Blue: '#1e7fff',
+  Purple: '#e60aff',
+  Gold: '#ffbf36',
+  White: '#ffffff'
+};
+const COLOR_NAMES = Object.keys(COLOR);
+const COLOR_CODES = COLOR_NAMES.map(name => COLOR[name]);
+const INVISIBLE = '_INVISIBLE_';
+
+const PI_2 = Math.PI * 2;
+const PI_HALF = Math.PI * 0.5;
+const MyMath = {
+  clamp: (num, min, max) => Math.min(max, Math.max(min, num)),
+  random: (min, max) => Math.random() * (max - min) + min,
+  pointDist: (x1,y1,x2,y2) => Math.hypot(x2-x1, y2-y1),
+  pointAngle: (x1,y1,x2,y2) => Math.atan2(y2-y1, x2-x1),
+  randomChoice: arr => arr[Math.random() * arr.length | 0],
+  weightedRandom: (items, weights) => {
+    let total = weights.reduce((a,b) => a+b, 0);
+    let r = Math.random() * total;
+    for (let i=0; i<items.length; i++) {
+      if (r < weights[i]) return items[i];
+      r -= weights[i];
+    }
+    return items[0];
+  }
+};
+
+// 二次爆炸效果（长拖尾专用）
+function longTrailSecondaryEffect(star) {
+  for (let i=0; i<6; i++) {
+    const angle = Math.random() * PI_2;
+    const speed = Math.random() * 1.5 + 0.8;
+    const hue = star.isSolid ? star.solidHue : randomRainbowHue();
+    addParticle(star.x, star.y, angle, speed, 200, 4, 0.02, { hue, size: 1.2 });
+  }
+}
+
+// Star添加，支持主体色、纯色标志，并增强尺寸与生命随机性
+const Star = {
+  add(x, y, color, angle, speed, life, speedOffX, speedOffY, mainHue, isSolid, sizeScale=1) {
+    const scaledLife = life * (0.6 + sizeScale * 0.4);
+    const scaledSize = 1.8 * (0.6 + Math.random() * 0.6) * sizeScale;
+    const scaledTrail = Math.floor(8 * (0.7 + sizeScale * 0.5));
+
+    let hue;
+    if (isSolid) {
+      hue = mainHue;
+    } else {
+      if (Math.random() < 0.2) {
+        hue = randomRainbowHue();
+      } else {
+        hue = hueAround(mainHue, 30);
+      }
+    }
+
+    let onDeath = null;
+    if (scaledLife > 500) {
+      onDeath = longTrailSecondaryEffect;
+    }
+
+    addParticle(x, y, angle, speed, scaledLife, scaledTrail, 0.03, {
+      hue, 
+      size: scaledSize,
+      isSolid: isSolid,
+      solidHue: isSolid ? mainHue : null,
+      onDeath: onDeath
+    });
+    const last = particles[particles.length-1];
+    last.sparkFreq = 0; last.sparkTimer = 0; last.sparkColor = color; last.sparkSpeed = 1; last.sparkLife = 500; last.sparkLifeVariation = 0.25; last.strobe = false; last.transitionTime = 0; last.secondColor = null; last.colorChanged = false; last.heavy = false; last.spinAngle = 0; last.spinSpeed = 0; last.spinRadius = 0;
+    return last;
+  }
+};
+
+// 其他二次爆炸效果（粒子数适当减少）
+function crossetteEffect(star) {
+  const startAngle = Math.random() * PI_HALF;
+  for (let i=0; i<4; i++) {
+    const angle = startAngle + i * PI_HALF;
+    const hue = star.isSolid ? star.solidHue : randomRainbowHue();
+    addParticle(star.x, star.y, angle, Math.random()*0.5+0.5, 400, 6, 0.03, { hue, size:1.5 });
+  }
+}
+function crackleEffect(star) {
+  for (let i=0; i<12; i++) {
+    const angle = Math.random() * PI_2;
+    const speed = Math.pow(Math.random(), 0.45) * 2.0;
+    const hue = star.isSolid ? star.solidHue : randomRainbowHue();
+    addParticle(star.x, star.y, angle, speed, 200+Math.random()*150, 5, 0.03, { hue, sparkle:true, size:1.2 });
+  }
+}
+function floralEffect(star) {
+  for (let i=0; i<12; i++) {
+    const angle = Math.random() * PI_2;
+    const speed = Math.random() * 2.0 + 1.0;
+    const hue = star.isSolid ? star.solidHue : randomRainbowHue();
+    addParticle(star.x, star.y, angle, speed, 600+Math.random()*200, 8, 0.03, { hue });
+  }
+}
+function fallingLeavesEffect(star) {
+  for (let i=0; i<5; i++) {
+    const angle = Math.random() * PI_2;
+    const speed = Math.random() * 2.0 + 1.0;
+    const hue = star.isSolid ? star.solidHue : 55;
+    const p = addParticle(star.x, star.y, angle, speed, 1500+Math.random()*400, 15, 0.04, { hue, size:2.0 });
+    p.sparkle = true;
+  }
+}
+function multiBurstEffect(star) {
+  for (let i=0; i<6; i++) {
+    const angle = Math.random() * PI_2;
+    const speed = Math.random() * 1.5 + 0.8;
+    const hue = star.isSolid ? star.solidHue : randomRainbowHue();
+    addParticle(star.x, star.y, angle, speed, 300, 5, 0.03, { hue, size:1.4 });
+  }
+}
+
+function createBurst(count, particleFactory, startAngle=0, arcLength=PI_2) {
+  const R = 0.5 * Math.sqrt(count/Math.PI);
+  const C = 2 * R * Math.PI;
+  const C_HALF = C / 2;
+  for (let i=0; i<=C_HALF; i++) {
+    const ringAngle = i / C_HALF * PI_HALF;
+    const ringSize = Math.cos(ringAngle);
+    const partsPerFullRing = C * ringSize;
+    const partsPerArc = partsPerFullRing * (arcLength / PI_2);
+    const angleInc = PI_2 / partsPerFullRing;
+    const angleOffset = Math.random() * angleInc + startAngle;
+    const maxRandomAngleOffset = angleInc * 0.33;
+    for (let j=0; j<partsPerArc; j++) {
+      const randomAngleOffset = Math.random() * maxRandomAngleOffset;
+      const angle = angleInc * j + angleOffset + randomAngleOffset;
+      particleFactory(angle, ringSize);
+    }
+  }
+}
+function createParticleArc(start, arcLength, count, randomness, factory) {
+  const angleDelta = arcLength / count;
+  const end = start + arcLength - angleDelta*0.5;
+  for (let angle=start; angle<end; angle+=angleDelta) {
+    factory(angle + Math.random()*angleDelta*randomness);
+  }
+}
+
+// ========== Shell 类型定义（减小爆炸范围） ==========
+function crysanthemumShell(size=1) {
+  return {
+    shellSize: size,
+    spreadSize: 200 + size*70,
+    starLife: 600 + size*150,
+    starDensity: 1.0,
+    color: MyMath.randomChoice(COLOR_CODES),
+    secondColor: null,
+    glitter: '',
+    pistil: Math.random()<0.4,
+    pistilColor: MyMath.randomChoice(COLOR_CODES),
+    streamers: Math.random()<0.3
+  };
+}
+function ghostShell(size=1) {
+  const shell = crysanthemumShell(size);
+  shell.starLife *= 1.4;
+  shell.color = INVISIBLE;
+  shell.secondColor = MyMath.randomChoice(COLOR_CODES);
+  shell.streamers = true;
+  shell.pistil = Math.random()<0.4;
+  shell.pistilColor = COLOR.Gold;
+  shell.glitter = '';
+  return shell;
+}
+function strobeShell(size=1) {
+  return {
+    shellSize: size,
+    spreadSize: 200 + size*60,
+    starLife: 700 + size*150,
+    starLifeVariation: 0.4,
+    starDensity: 0.9,
+    color: MyMath.randomChoice(COLOR_CODES),
+    glitter: 'light',
+    glitterColor: COLOR.White,
+    strobe: true,
+    pistil: Math.random()<0.5,
+    pistilColor: MyMath.randomChoice(COLOR_CODES)
+  };
+}
+function palmShell(size=1) {
+  return {
+    shellSize: size,
+    spreadSize: 180 + size*50,
+    starDensity: Math.random()<0.5 ? 0.15 : 0.3,
+    starLife: 1200 + size*150,
+    color: MyMath.randomChoice(COLOR_CODES),
+    glitter: Math.random()<0.5 ? 'thick' : 'heavy',
+    glitterColor: COLOR.Gold
+  };
+}
+function ringShell(size=1) {
+  return {
+    shellSize: size,
+    ring: true,
+    spreadSize: 220 + size*70,
+    starLife: 600 + size*150,
+    starCount: Math.floor(1.5 * PI_2 * (size+1)),
+    color: MyMath.randomChoice(COLOR_CODES),
+    pistil: Math.random()<0.75,
+    pistilColor: MyMath.randomChoice(COLOR_CODES),
+    glitter: 'light',
+    streamers: Math.random()<0.3
+  };
+}
+function crossetteShell(size=1) {
+  return {
+    shellSize: size,
+    spreadSize: 220 + size*70,
+    starLife: 500 + size*120,
+    starLifeVariation: 0.4,
+    starDensity: 0.8,
+    color: MyMath.randomChoice(COLOR_CODES),
+    crossette: true,
+    pistil: Math.random()<0.5,
+    pistilColor: MyMath.randomChoice(COLOR_CODES)
+  };
+}
+function floralShell(size=1) {
+  return {
+    shellSize: size,
+    spreadSize: 220 + size*80,
+    starDensity: 0.1,
+    starLife: 350 + size*40,
+    starLifeVariation: 0.5,
+    color: MyMath.randomChoice(COLOR_CODES),
+    floral: true
+  };
+}
+function fallingLeavesShell(size=1) {
+  return {
+    shellSize: size,
+    spreadSize: 220 + size*80,
+    starDensity: 0.1,
+    starLife: 350 + size*40,
+    starLifeVariation: 0.5,
+    color: INVISIBLE,
+    glitter: 'medium',
+    glitterColor: COLOR.Gold,
+    fallingLeaves: true
+  };
+}
+function willowShell(size=1) {
+  return {
+    shellSize: size,
+    spreadSize: 220 + size*70,
+    starDensity: 0.5,
+    starLife: 2000 + size*200,
+    glitter: 'willow',
+    glitterColor: COLOR.Gold,
+    color: INVISIBLE
+  };
+}
+function crackleShell(size=1) {
+  return {
+    shellSize: size,
+    spreadSize: 260 + size*50,
+    starDensity: 0.8,
+    starLife: 400 + size*80,
+    starLifeVariation: 0.32,
+    glitter: 'light',
+    glitterColor: COLOR.Gold,
+    color: MyMath.randomChoice(COLOR_CODES),
+    crackle: true,
+    pistil: Math.random()<0.6,
+    pistilColor: COLOR.White
+  };
+}
+function horsetailShell(size=1) {
+  return {
+    shellSize: size,
+    horsetail: true,
+    spreadSize: 180 + size*30,
+    starDensity: 0.8,
+    starLife: 1800 + size*200,
+    color: MyMath.randomChoice(COLOR_CODES),
+    glitter: 'medium',
+    glitterColor: COLOR.Gold,
+    strobe: false
+  };
+}
+function waterfallShell(size=1) {
+  return {
+    shellSize: size,
+    burst: function(x, y, mainHue, isSolid, sizeScale) {
+      for(let i=0;i<180;i++){
+        const angle = Math.PI/2 + (Math.random()-0.5)*1.2;
+        const speed = 2.5 + Math.random()*1.5;
+        let hue;
+        if (isSolid) {
+          hue = mainHue;
+        } else {
+          hue = Math.random() < 0.2 ? randomRainbowHue() : hueAround(mainHue, 30);
+        }
+        const scaledLife = 200 * sizeScale;
+        const scaledTrail = Math.floor(20 * sizeScale);
+        const scaledSize = 2.0 * sizeScale;
+        addParticle(x,y,angle,speed,scaledLife,scaledTrail,0.05,{ hue, size: scaledSize, isSolid, solidHue: isSolid ? mainHue : null });
+      }
+      for(let j=0;j<6;j++){
+        const hue = isSolid ? mainHue : randomRainbowHue();
+        addParticle(x,y,Math.random()*PI_2, Math.random()*1.5, 20, 3, 0.01, {hue, size:2*sizeScale, isSolid, solidHue: isSolid ? mainHue : null});
+      }
+    }
+  };
+}
+function simpleLauncherShell(size=1) {
+  return {
+    shellSize: size,
+    burst: function(x, y, mainHue, isSolid, sizeScale) {
+      for (let i=0; i<8; i++) {
+        const angle = Math.random() * PI_2;
+        const speed = Math.random() * 3 + 1.5;
+        let hue;
+        if (isSolid) {
+          hue = mainHue;
+        } else {
+          hue = Math.random() < 0.2 ? randomRainbowHue() : hueAround(mainHue, 30);
+        }
+        const scaledLife = 70 * sizeScale;
+        const scaledTrail = Math.floor(4 * sizeScale);
+        const scaledSize = 2.2 * sizeScale;
+        addParticle(x, y, angle, speed, scaledLife, scaledTrail, 0.03, { hue, size: scaledSize, isSolid, solidHue: isSolid ? mainHue : null });
+      }
+    }
+  };
+}
+function multiBurstShell(size=1) {
+  return {
+    shellSize: size,
+    spreadSize: 200 + size*70,
+    starLife: 500 + size*100,
+    starDensity: 0.9,
+    color: MyMath.randomChoice(COLOR_CODES),
+    secondColor: null,
+    glitter: '',
+    pistil: false,
+    streamers: false,
+    multiBurst: true
+  };
+}
+
+const shellTypes = {
+  'Crysanthemum': crysanthemumShell,
+  'Ghost': ghostShell,
+  'Strobe': strobeShell,
+  'Palm': palmShell,
+  'Ring': ringShell,
+  'Crossette': crossetteShell,
+  'Floral': floralShell,
+  'FallingLeaves': fallingLeavesShell,
+  'Willow': willowShell,
+  'Crackle': crackleShell,
+  'Horsetail': horsetailShell,
+  'Waterfall': waterfallShell,
+  'SimpleLauncher': simpleLauncherShell,
+  'MultiBurst': multiBurstShell
+};
+const shellNames = Object.keys(shellTypes);
+const shellWeights = {
+  'Crysanthemum': 25,
+  'Ring': 25,
+  'Crossette': 25,
+  'Ghost': 2.5,
+  'Strobe': 2.5,
+  'Palm': 2.5,
+  'Floral': 2.5,
+  'FallingLeaves': 2.5,
+  'Willow': 2.5,
+  'Crackle': 2.5,
+  'Horsetail': 2.5,
+  'Waterfall': 2.5,
+  'SimpleLauncher': 2.5,
+  'MultiBurst': 2.5
+};
+const shellWeightArray = shellNames.map(name => shellWeights[name]);
+
+class Shell {
+  constructor(options) {
+    Object.assign(this, options);
+    this.starLifeVariation = options.starLifeVariation || 0.125;
+    this.color = options.color || COLOR.Gold;
+    this.glitterColor = options.glitterColor || this.color;
+    if (!this.starCount) {
+      const density = options.starDensity || 1;
+      const scaledSize = this.spreadSize / 54;
+      this.starCount = Math.max(4, Math.floor(scaledSize * scaledSize * density * 0.8));
+    }
+  }
+  burst(x, y, mainHue, isSolid, sizeScale=1) {
+    const speed = this.spreadSize / 120 * sizeScale;
+    let onDeath = null;
+    let playedDeathSound = false;
+    if (this.crossette) onDeath = (star) => { if (!playedDeathSound) { playedDeathSound = true; crossetteEffect(star); } };
+    if (this.crackle) onDeath = (star) => { if (!playedDeathSound) { playedDeathSound = true; crackleEffect(star); } };
+    if (this.floral) onDeath = floralEffect;
+    if (this.fallingLeaves) onDeath = fallingLeavesEffect;
+    if (this.multiBurst) onDeath = (star) => { multiBurstEffect(star); };
+
+    let sparkFreq, sparkSpeed, sparkLife, sparkLifeVariation;
+    if (this.glitter === 'light') { sparkFreq = 400; sparkSpeed = 0.3; sparkLife = 300; sparkLifeVariation = 2; }
+    else if (this.glitter === 'medium') { sparkFreq = 200; sparkSpeed = 0.44; sparkLife = 700; sparkLifeVariation = 2; }
+    else if (this.glitter === 'heavy') { sparkFreq = 80; sparkSpeed = 0.8; sparkLife = 1400; sparkLifeVariation = 2; }
+    else if (this.glitter === 'thick') { sparkFreq = 16; sparkSpeed = 1.5; sparkLife = 1400; sparkLifeVariation = 3; }
+    else if (this.glitter === 'willow') { sparkFreq = 120; sparkSpeed = 0.34; sparkLife = 1400; sparkLifeVariation = 3.8; }
+
+    const starFactory = (angle, speedMult) => {
+      const star = Star.add(x, y, this.color, angle, speedMult * speed, this.starLife, 0, 0, mainHue, isSolid, sizeScale);
+      if (this.secondColor) {
+        star.secondColor = this.secondColor;
+        star.transitionTime = this.starLife * (Math.random()*0.05 + 0.32);
+      }
+      if (this.strobe) {
+        star.strobe = true;
+        star.strobeFreq = Math.random() * 20 + 40;
+      }
+      if (onDeath) {
+        star.onDeath = onDeath;
+      }
+      if (this.glitter) {
+        star.sparkFreq = sparkFreq; star.sparkSpeed = sparkSpeed; star.sparkLife = sparkLife; star.sparkLifeVariation = sparkLifeVariation; star.sparkColor = this.glitterColor; star.sparkTimer = Math.random() * sparkFreq;
+      }
+    };
+
+    if (this.ring) {
+      const ringStartAngle = Math.random() * Math.PI;
+      const ringSquash = Math.pow(Math.random(),2)*0.85+0.15;
+      createParticleArc(0, PI_2, this.starCount, 0, angle => {
+        const initSpeedX = Math.sin(angle) * speed * ringSquash;
+        const initSpeedY = Math.cos(angle) * speed;
+        const newSpeed = MyMath.pointDist(0,0,initSpeedX,initSpeedY);
+        const newAngle = MyMath.pointAngle(0,0,initSpeedX,initSpeedY) + ringStartAngle;
+        Star.add(x, y, this.color, newAngle, newSpeed, this.starLife, 0, 0, mainHue, isSolid, sizeScale);
+      });
+    } else {
+      createBurst(this.starCount, starFactory);
+    }
+
+    if (this.pistil) {
+      const inner = new Shell({ spreadSize: this.spreadSize * 0.5, starLife: this.starLife * 0.6, starLifeVariation: this.starLifeVariation, starDensity: 1.4, color: this.pistilColor, glitter: 'light', glitterColor: this.pistilColor });
+      inner.burst(x, y, hueAround(mainHue, 20), isSolid, sizeScale*0.8);
+    }
+    if (this.streamers) {
+      const inner = new Shell({ spreadSize: this.spreadSize * 0.9, starLife: this.starLife * 0.8, starLifeVariation: this.starLifeVariation, starCount: Math.floor(Math.max(4, this.spreadSize / 60)), color: COLOR.White, glitter: 'streamer' });
+      inner.burst(x, y, mainHue, isSolid, sizeScale*0.9);
+    }
+  }
+}
+
+/* ================= 火箭发射（高度限制在5%-35%之间） ================= */
+function launchFrom(x, layer=1){
+  let targetY = h * (0.05 + Math.random() * 0.3);
+
+  rockets.push({
+    x,
+    y:h*0.95,
+    vx:(Math.random()-0.5)*0.25,
+    vy:-(6+Math.random()*1.5),
+    targetY,
+    sizeScale:Math.random()<0.05 ? 1.2 : (0.4+Math.random()*0.6)
+  });
+}
+
+/* ================= 爆炸函数（移除冲击波调用） ================= */
+function explode(x,y,sizeScale=1){
+  // 天空亮度
+  skyFlash = Math.max(skyFlash, 0.8 * sizeScale);
+
+  const name = MyMath.weightedRandom(shellNames, shellWeightArray);
+  const shellConfig = shellTypes[name](3);
+  const mainHue = randomRainbowHue();
+  const isSolid = Math.random() < 0.3; // 30%纯色
+
+  if (shellConfig.burst) {
+    shellConfig.burst(x, y, mainHue, isSolid, sizeScale);
+  } else {
+    const shell = new Shell(shellConfig);
+    shell.burst(x, y, mainHue, isSolid, sizeScale);
+  }
+
+  // 偶尔二次爆炸
+  if(Math.random()<0.2){
+    setTimeout(()=>{
+      const name2 = MyMath.weightedRandom(shellNames, shellWeightArray);
+      const cfg = shellTypes[name2](2);
+      const mainHue2 = randomRainbowHue();
+      const isSolid2 = Math.random() < 0.3;
+      if (cfg.burst) cfg.burst(x+Math.random()*15-7.5, y+Math.random()*15-7.5, mainHue2, isSolid2, sizeScale*0.6);
+      else new Shell(cfg).burst(x+Math.random()*15-7.5, y+Math.random()*15-7.5, mainHue2, isSolid2, sizeScale*0.6);
+    }, 300);
+  }
+}
+
+/* ================= 动画 ================= */
+function animate(){
+ if(!running) return;
+ requestAnimationFrame(animate);
+
+ // 背景
+ if(bg.complete) ctx.drawImage(bg,0,0,w,h);
+ else { ctx.fillStyle='#000'; ctx.fillRect(0,0,w,h); }
+
+ // 天空亮度
+ if(skyFlash>0){
+   ctx.fillStyle=`rgba(255,220,120,${skyFlash*0.15})`;
+   ctx.fillRect(0,0,w,h);
+   skyFlash*=0.88;
+ }
+
+ // 星空
+ stars.forEach(s=>{
+   const tw=0.5+0.5*Math.sin(Date.now()*0.002+s.phase);
+   ctx.fillStyle=`rgba(255,255,255,${tw})`;
+   ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+ });
+
+ // 火箭
+ for(let i=rockets.length-1;i>=0;i--){
+   const r=rockets[i];
+   r.x+=r.vx; r.y+=r.vy; r.vy+=0.015;
+   ctx.fillStyle="#ffcc88";
+   ctx.beginPath(); ctx.arc(r.x,r.y,2.5,0,6.28); ctx.fill();
+   if(r.y<=r.targetY){
+     explode(r.x, r.y, r.sizeScale);
+     rockets.splice(i,1);
+   }
+ }
+
+ // 粒子（渐变消失：大小随生命衰减）
+ for(let i=particles.length-1;i>=0;i--){
+   const p=particles[i];
+   p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.life--;
+   p.trail.push({x:p.x,y:p.y}); if(p.trail.length>p.maxTrail) p.trail.shift();
+   p.trail.forEach((t,j)=>{
+     if(p.strobe && Math.floor(p.life/8)%2===0) return;
+     const lifeFactor = Math.pow(p.life / p.fullLife, 0.6);
+     const currentSize = p.size * lifeFactor;
+     ctx.fillStyle=`hsla(${p.hue},100%,70%,${j/p.maxTrail})`;
+     ctx.beginPath();
+     ctx.arc(t.x,t.y,currentSize,0,6.28);
+     ctx.fill();
+   });
+   if(p.sparkle && Math.random()<0.2){ ctx.fillStyle="rgba(255,255,200,0.8)"; ctx.fillRect(p.x,p.y,1.5,1.5); }
+   if(p.life<=0){
+     if(p.onDeath) p.onDeath(p);
+     particles.splice(i,1);
+   }
+ }
+}
+
+/* ================= Finale 连射（每秒2枚，共5秒=10枚） ================= */
+function startFinale(){
+  finaleMode=true;
+  let countdown = 5;
+  const interval = setInterval(() => {
+    if(!running || countdown <= 0) {
+      clearInterval(interval);
+      finaleMode = false;
+      return;
+    }
+    for(let i=0;i<2;i++){
+      const x = w * (0.2 + Math.random()*0.6);
+      launchFrom(x, Math.floor(Math.random()*3));
+    }
+    countdown--;
+  }, 1000);
+}
+
+/* ================= 流程 ================= */
+const intro=document.getElementById("introVideo");
+const wrap=document.getElementById("videoWrap");
+const transition=document.getElementById("transitionText");
+const mainText=document.getElementById("mainText");
+
+setTimeout(() => intro.classList.add("goldFrame"), 800);
+
+function startMain(){
+ transition.classList.add("show");
+ setTimeout(()=>{
+  transition.style.opacity=0;
+  setTimeout(()=>{
+    transition.style.display="none";
+    mainText.classList.add("show");
+    running=true;
+    animate();
+
+    setInterval(()=>{
+      if(!running || finaleMode) return;
+      const count = 1 + Math.floor(Math.random()*2);
+      for(let i=0;i<count;i++){
+        launchFrom(
+          w*(0.2+Math.random()*0.6),
+          Math.floor(Math.random()*3)
+        );
+      }
+    }, 3000);
+
+    setTimeout(startFinale, 20000);
+
+    bgm.play().catch(()=>{});
+  },1000);
+ },1800);
+}
+
+intro.onended=()=>{ wrap.style.opacity=0; setTimeout(()=>{wrap.remove();startMain();},1000); };
+intro.play().catch(()=>{ document.addEventListener("click",()=>intro.play(),{once:true}); });
+canvas.onclick=e=>{ if(running) launchFrom(e.clientX, 2); };
+
+})();
+</script>
+
+</body>
+</html>
